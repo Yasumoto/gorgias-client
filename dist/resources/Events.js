@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Events = void 0;
-class Events {
+export class Events {
     // eslint-disable-next-line no-unused-vars
     constructor(_axios) {
         this._axios = _axios;
@@ -25,4 +22,3 @@ class Events {
         return response.data;
     }
 }
-exports.Events = Events;

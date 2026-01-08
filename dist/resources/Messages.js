@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Messages = void 0;
-class Messages {
+export class Messages {
     // eslint-disable-next-line no-unused-vars
     constructor(_axios) {
         this._axios = _axios;
@@ -62,4 +59,3 @@ class Messages {
         await this._axios.delete(`/messages/${id}`);
     }
 }
-exports.Messages = Messages;

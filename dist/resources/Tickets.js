@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Tickets = void 0;
-class Tickets {
+export class Tickets {
     // eslint-disable-next-line no-unused-vars
     constructor(_axios) {
         this._axios = _axios;
@@ -84,4 +81,3 @@ class Tickets {
         return response.data;
     }
 }
-exports.Tickets = Tickets;

@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Customers = void 0;
-class Customers {
+export class Customers {
     // eslint-disable-next-line no-unused-vars
     constructor(_axios) {
         this._axios = _axios;
@@ -58,4 +55,3 @@ class Customers {
         await this._axios.delete('/customers', { data: { customers: customerIds } });
     }
 }
-exports.Customers = Customers;

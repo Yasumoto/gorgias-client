@@ -1,24 +1,19 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const globals_1 = require("@jest/globals");
-const axios_1 = __importDefault(require("axios"));
-globals_1.jest.mock('axios');
-const mockedAxios = axios_1.default;
+import { jest } from '@jest/globals';
+import axios from 'axios';
+jest.mock('axios');
+const mockedAxios = axios;
 // Mock axios.create to return a mock instance
 mockedAxios.create.mockReturnValue({
     interceptors: {
         response: {
-            use: globals_1.jest.fn(),
+            use: jest.fn(),
         },
     },
-    get: globals_1.jest.fn(),
-    post: globals_1.jest.fn(),
-    put: globals_1.jest.fn(),
-    delete: globals_1.jest.fn(),
-    request: globals_1.jest.fn(),
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    request: jest.fn(),
 });
 describe('Axios Mock Setup', () => {
     it('should have axios.create mocked', () => {

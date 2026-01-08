@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Integrations = void 0;
-class Integrations {
+export class Integrations {
     // eslint-disable-next-line no-unused-vars
     constructor(_axios) {
         this._axios = _axios;
@@ -25,4 +22,3 @@ class Integrations {
         return response.data;
     }
 }
-exports.Integrations = Integrations;
