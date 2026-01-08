@@ -5,7 +5,7 @@ import {
   UserUpdateRequest,
   PaginatedResponse,
   PaginationParams
-} from '../types';
+} from '../types.js';
 
 export class Users {
   // eslint-disable-next-line no-unused-vars

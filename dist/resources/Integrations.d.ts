@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios';
-import { Integration, PaginatedResponse, PaginationParams } from '../types';
+import { Integration, PaginatedResponse, PaginationParams } from '../types.js';
 export declare class Integrations {
     private _axios;
     constructor(_axios: AxiosInstance);

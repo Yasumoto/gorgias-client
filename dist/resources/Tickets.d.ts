@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios';
-import { Ticket, TicketCreateRequest, TicketUpdateRequest, PaginatedResponse, PaginationParams } from '../types';
+import { Ticket, TicketCreateRequest, TicketUpdateRequest, PaginatedResponse, PaginationParams } from '../types.js';
 export declare class Tickets {
     private _axios;
     constructor(_axios: AxiosInstance);

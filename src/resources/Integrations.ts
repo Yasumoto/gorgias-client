@@ -1,6 +1,6 @@
 import type { AxiosInstance } from 'axios';
 import {
-  Integration, PaginatedResponse, PaginationParams } from '../types';
+  Integration, PaginatedResponse, PaginationParams } from '../types.js';
 
 export class Integrations {
   // eslint-disable-next-line no-unused-vars

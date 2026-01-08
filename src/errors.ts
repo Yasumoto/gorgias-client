@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios';
-import { GorgiasError } from './types';
+import { GorgiasError } from './types.js';
 
 export class GorgiasAPIError extends Error implements GorgiasError {
   status: number;

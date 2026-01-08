@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { AxiosConfig, PaginationParams, PaginatedResponse } from './types';
-import { handleAxiosError } from './errors';
+import { AxiosConfig, PaginationParams, PaginatedResponse } from './types.js';
+import { handleAxiosError } from './errors.js';
 
 export class GorgiasClient {
   private axiosInstance: AxiosInstance;
@@ -68,9 +68,9 @@ export class GorgiasClient {
 }
 
 // Import resource classes here to avoid circular dependencies
-import { Customers } from './resources/Customers';
-import { Tickets } from './resources/Tickets';
-import { Messages } from './resources/Messages';
-import { Users } from './resources/Users';
-import { Integrations } from './resources/Integrations';
-import { Events } from './resources/Events';
+import { Customers } from './resources/Customers.js';
+import { Tickets } from './resources/Tickets.js';
+import { Messages } from './resources/Messages.js';
+import { Users } from './resources/Users.js';
+import { Integrations } from './resources/Integrations.js';
+import { Events } from './resources/Events.js';

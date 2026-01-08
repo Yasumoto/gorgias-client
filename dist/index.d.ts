@@ -1,3 +1,2 @@
-export { GorgiasClient } from './GorgiasClient';
-export { GorgiasAPIError } from './errors';
-export * from './types';
+export { GorgiasClient } from './GorgiasClient.js';
+export { GorgiasAPIError } from './errors.js';

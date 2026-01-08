@@ -5,7 +5,7 @@ import {
   TicketMessageUpdateRequest,
   PaginatedResponse,
   PaginationParams
-} from '../types';
+} from '../types.js';
 
 export class Messages {
   // eslint-disable-next-line no-unused-vars

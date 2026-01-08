@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios';
-import { Customer, CustomerCreateRequest, CustomerUpdateRequest, PaginatedResponse, PaginationParams } from '../types';
+import { Customer, CustomerCreateRequest, CustomerUpdateRequest, PaginatedResponse, PaginationParams } from '../types.js';
 export declare class Customers {
     private _axios;
     constructor(_axios: AxiosInstance);

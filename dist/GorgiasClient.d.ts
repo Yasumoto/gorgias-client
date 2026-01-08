@@ -1,5 +1,5 @@
 import { AxiosRequestConfig } from 'axios';
-import { AxiosConfig } from './types';
+import { AxiosConfig } from './types.js';
 export declare class GorgiasClient {
     private axiosInstance;
     customers: Customers;
@@ -21,9 +21,9 @@ export declare class GorgiasClient {
      */
     request<T = any>(config: AxiosRequestConfig): Promise<T>;
 }
-import { Customers } from './resources/Customers';
-import { Tickets } from './resources/Tickets';
-import { Messages } from './resources/Messages';
-import { Users } from './resources/Users';
-import { Integrations } from './resources/Integrations';
-import { Events } from './resources/Events';
+import { Customers } from './resources/Customers.js';
+import { Tickets } from './resources/Tickets.js';
+import { Messages } from './resources/Messages.js';
+import { Users } from './resources/Users.js';
+import { Integrations } from './resources/Integrations.js';
+import { Events } from './resources/Events.js';

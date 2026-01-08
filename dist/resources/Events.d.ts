@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios';
-import { Event, PaginatedResponse, PaginationParams } from '../types';
+import { Event, PaginatedResponse, PaginationParams } from '../types.js';
 export declare class Events {
     private _axios;
     constructor(_axios: AxiosInstance);
