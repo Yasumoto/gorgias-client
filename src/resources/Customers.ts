@@ -1,70 +1,130 @@
-import type { AxiosInstance } from 'axios';
-import {
+/**
+ * Customer resource operations.
+ */
+
+import { BaseResource } from './base.js';
+import type { HttpClient, RequestOptions } from '../http/index.js';
+import { paginate } from '../pagination/index.js';
+import type { PaginationConfig } from '../pagination/index.js';
+import type {
   Customer,
   CustomerCreateRequest,
   CustomerUpdateRequest,
   PaginatedResponse,
-  PaginationParams
+  PaginationParams,
 } from '../types.js';
+import { validateNonEmptyArray } from '../validation/index.js';
 
-export class Customers {
-  // eslint-disable-next-line no-unused-vars
-  constructor(private _axios: AxiosInstance) {}
+export interface CustomerListParams extends PaginationParams {
+  email?: string;
+  external_id?: string;
+}
+
+export class Customers extends BaseResource {
+  constructor(http: HttpClient) {
+    super(http);
+  }
 
   /**
-   * List customers
+   * List customers with pagination.
    * @param params - Pagination and filtering parameters
+   * @param options - Request options
    * @returns Paginated list of customers
    */
-  async list(params: PaginationParams & { email?: string; external_id?: string } = {}): Promise<PaginatedResponse<Customer>> {
-    const response = await this._axios.get('/customers', { params });
-    return response.data;
+  async list(
+    params: CustomerListParams = {},
+    options?: RequestOptions
+  ): Promise<PaginatedResponse<Customer>> {
+    return this._get<PaginatedResponse<Customer>>(
+      '/customers',
+      params as Record<string, string | number | boolean | undefined>,
+      options
+    );
   }
 
   /**
-   * Get a customer by ID
+   * Iterate through all customers automatically handling pagination.
+   * @param params - Filtering parameters
+   * @param config - Pagination configuration
+   * @yields Individual customers
+   *
+   * @example
+   * ```typescript
+   * for await (const customer of client.customers.listAll({ email: 'test@example.com' })) {
+   *   console.log(customer.id);
+   * }
+   * ```
+   */
+  async *listAll(
+    params?: Omit<CustomerListParams, 'cursor' | 'limit'>,
+    config?: PaginationConfig
+  ): AsyncGenerator<Customer, void, undefined> {
+    yield* paginate(
+      (cursor, limit) => this.list({ ...params, cursor, limit }),
+      config
+    );
+  }
+
+  /**
+   * Get a customer by ID.
    * @param id - Customer ID
+   * @param options - Request options
    * @returns Customer object
    */
-  async get(id: number): Promise<Customer> {
-    const response = await this._axios.get(`/customers/${id}`);
-    return response.data;
+  async get(id: number, options?: RequestOptions): Promise<Customer> {
+    this.validateResourceId(id, 'customer');
+    return this._get<Customer>(`/customers/${id}`, undefined, options);
   }
 
   /**
-   * Create a new customer
+   * Create a new customer.
    * @param data - Customer creation data
+   * @param options - Request options
    * @returns Created customer object
    */
-  async create(data: CustomerCreateRequest): Promise<Customer> {
-    const response = await this._axios.post('/customers', data);
-    return response.data;
+  async create(
+    data: CustomerCreateRequest,
+    options?: RequestOptions
+  ): Promise<Customer> {
+    return this._post<Customer>('/customers', data, options);
   }
 
   /**
-   * Update a customer
+   * Update a customer.
    * @param id - Customer ID
    * @param data - Customer update data
+   * @param options - Request options
    * @returns Updated customer object
    */
-  async update(id: number, data: CustomerUpdateRequest): Promise<Customer> {
-    const response = await this._axios.put(`/customers/${id}`, data);
-    return response.data;
+  async update(
+    id: number,
+    data: CustomerUpdateRequest,
+    options?: RequestOptions
+  ): Promise<Customer> {
+    this.validateResourceId(id, 'customer');
+    return this._put<Customer>(`/customers/${id}`, data, options);
   }
 
   /**
-   * Delete a customer
+   * Delete a customer.
    * @param id - Customer ID
+   * @param options - Request options
    */
-  async delete(id: number): Promise<void> {
-    await this._axios.delete(`/customers/${id}`);
+  async delete(id: number, options?: RequestOptions): Promise<void> {
+    this.validateResourceId(id, 'customer');
+    await this._delete(`/customers/${id}`, undefined, options);
   }
 
   /**
-   * Delete multiple customers
+   * Delete multiple customers.
    * @param customerIds - Array of customer IDs to delete
+   * @param options - Request options
    */
-  async deleteMany(customerIds: number[]): Promise<void> {
-    await this._axios.delete('/customers', { data: { customers: customerIds } });
+  async deleteMany(customerIds: number[], options?: RequestOptions): Promise<void> {
+    validateNonEmptyArray(customerIds, 'customerIds');
+    for (const id of customerIds) {
+      this.validateResourceId(id, 'customer');
+    }
+    await this._delete('/customers', { customers: customerIds }, options);
   }
 }

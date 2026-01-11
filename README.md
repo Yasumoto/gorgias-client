@@ -2,11 +2,22 @@
 
 A modern, well-typed TypeScript client library for the Gorgias REST API.
 
+## Features
+
+- Zero runtime dependencies (uses native `fetch`)
+- Built-in retry with exponential backoff
+- TypeScript-first with comprehensive type definitions
+- Auto-pagination with async iterators
+- Request cancellation via AbortSignal
+- Structured logging support
+
 ## Installation
 
 ```bash
 npm install gorgias-client
 ```
+
+**Requirements:** Node.js 18+
 
 ## Quick Start
 
@@ -14,11 +25,11 @@ npm install gorgias-client
 import { GorgiasClient } from 'gorgias-client';
 
 // Initialize the client
-const client = new GorgiasClient(
-  'your-subdomain', // e.g., 'mycompany'
-  'your-email@gorgias.com',
-  'your-api-key'
-);
+const client = new GorgiasClient({
+  subdomain: 'your-subdomain',  // e.g., 'mycompany'
+  email: 'your-email@gorgias.com',
+  apiKey: 'your-api-key',
+});
 
 // List customers
 const customers = await client.customers.list({ limit: 50 });
@@ -39,6 +50,28 @@ const ticket = await client.tickets.create({
 const messages = await client.messages.listForTicket(ticket.id);
 ```
 
+## Configuration
+
+```typescript
+import { GorgiasClient } from 'gorgias-client';
+
+const client = new GorgiasClient({
+  subdomain: 'mycompany',
+  email: 'user@example.com',
+  apiKey: 'your-api-key',
+
+  // Optional configuration
+  timeoutMs: 30000,           // Request timeout (default: 30000)
+  retry: {
+    maxAttempts: 3,           // Max retry attempts (default: 3)
+    baseDelayMs: 1000,        // Base delay for backoff (default: 1000)
+    maxDelayMs: 30000,        // Max delay cap (default: 30000)
+  },
+  logger: console,            // Logger for debugging (optional)
+  traceIdHeader: 'x-trace-id', // Header for trace ID propagation
+});
+```
+
 ## API Reference
 
 ### Customers
@@ -46,6 +79,11 @@ const messages = await client.messages.listForTicket(ticket.id);
 ```typescript
 // List customers
 const customers = await client.customers.list({ limit: 100, cursor: 'next_cursor' });
+
+// Auto-paginate through all customers
+for await (const customer of client.customers.listAll()) {
+  console.log(customer.id, customer.email);
+}
 
 // Get a customer
 const customer = await client.customers.get(123);
@@ -64,6 +102,9 @@ const updatedCustomer = await client.customers.update(123, {
 
 // Delete a customer
 await client.customers.delete(123);
+
+// Delete multiple customers
+await client.customers.deleteMany([123, 456, 789]);
 ```
 
 ### Tickets
@@ -71,6 +112,11 @@ await client.customers.delete(123);
 ```typescript
 // List tickets
 const tickets = await client.tickets.list({ status: 'open', limit: 50 });
+
+// Auto-paginate through all tickets
+for await (const ticket of client.tickets.listAll({ status: 'open' })) {
+  console.log(ticket.id, ticket.subject);
+}
 
 // Get a ticket
 const ticket = await client.tickets.get(456);
@@ -93,7 +139,9 @@ const updatedTicket = await client.tickets.update(456, {
 
 // Manage tags
 await client.tickets.addTags(456, ['urgent', 'bug']);
-await client.tickets.setTags(456, ['resolved']);
+await client.tickets.removeTags(456, ['bug']);
+await client.tickets.setTags(456, ['resolved']);  // Replaces all tags
+const tags = await client.tickets.listTags(456);
 ```
 
 ### Messages
@@ -101,6 +149,11 @@ await client.tickets.setTags(456, ['resolved']);
 ```typescript
 // List messages for a ticket
 const messages = await client.messages.listForTicket(456);
+
+// Auto-paginate through all messages for a ticket
+for await (const message of client.messages.listAllForTicket(456)) {
+  console.log(message.body_text);
+}
 
 // List all messages
 const allMessages = await client.messages.list({ limit: 100 });
@@ -169,6 +222,8 @@ const event = await client.events.get(456);
 
 ## Pagination
 
+### Manual Pagination
+
 The API uses cursor-based pagination. All list methods return a `PaginatedResponse` object:
 
 ```typescript
@@ -183,64 +238,129 @@ interface PaginatedResponse<T> {
 }
 ```
 
-To get the next page:
+To manually paginate:
 
 ```typescript
 let response = await client.customers.list({ limit: 50 });
 
 while (response.meta.next_cursor) {
-  response = await client.customers.list({ 
-    limit: 50, 
-    cursor: response.meta.next_cursor 
+  response = await client.customers.list({
+    limit: 50,
+    cursor: response.meta.next_cursor
   });
-  
+
   // Process response.data
 }
 ```
 
-## Error Handling
+### Auto-Pagination
 
-The client throws `GorgiasAPIError` instances for API errors:
+Use `listAll()` methods to automatically iterate through all pages:
 
 ```typescript
-import { GorgiasAPIError } from 'gorgias-client';
+// Async iterator - memory efficient for large datasets
+for await (const customer of client.customers.listAll()) {
+  console.log(customer.id);
+}
+
+// Or collect all items (use with caution for large datasets)
+import { collectAll } from 'gorgias-client';
+
+const allCustomers = await collectAll(
+  (cursor, limit) => client.customers.list({ cursor, limit })
+);
+```
+
+## Error Handling
+
+The client provides typed error classes:
+
+```typescript
+import {
+  GorgiasAPIError,
+  RateLimitError,
+  NotFoundError,
+  AuthenticationError,
+  ValidationError,
+  NetworkError,
+  TimeoutError
+} from 'gorgias-client';
 
 try {
   const customer = await client.customers.get(123);
 } catch (error) {
-  if (error instanceof GorgiasAPIError) {
-    console.error(`API Error ${error.status}: ${error.message}`);
-    console.error('Response:', error.response);
-  } else {
-    console.error('Network error:', error);
+  if (error instanceof RateLimitError) {
+    // Rate limited - retry after delay
+    console.log(`Rate limited. Retry after ${error.retryAfterMs}ms`);
+  } else if (error instanceof NotFoundError) {
+    console.log('Customer not found');
+  } else if (error instanceof AuthenticationError) {
+    console.log('Invalid credentials');
+  } else if (error instanceof ValidationError) {
+    // Client-side validation failed
+    console.log(`Invalid ${error.field}: ${error.message}`);
+  } else if (error instanceof GorgiasAPIError) {
+    // Other API errors
+    console.log(`API Error ${error.status}: ${error.message}`);
+    console.log('Request:', error.requestContext.method, error.requestContext.path);
+  } else if (error instanceof NetworkError) {
+    console.log('Network error:', error.message);
+  } else if (error instanceof TimeoutError) {
+    console.log(`Request timed out after ${error.timeoutMs}ms`);
   }
 }
 ```
 
 ## Rate Limiting
 
-The Gorgias API has rate limits. The client respects HTTP 429 responses. You can implement retry logic:
+The client has built-in retry with exponential backoff that automatically handles rate limits (HTTP 429):
 
 ```typescript
-import { GorgiasAPIError } from 'gorgias-client';
+// Default: 3 retries with exponential backoff
+const client = new GorgiasClient({
+  subdomain: 'mycompany',
+  email: 'user@example.com',
+  apiKey: 'your-api-key',
+});
 
-async function apiCallWithRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
-  try {
-    return await fn();
-  } catch (error) {
-    if (error instanceof GorgiasAPIError && error.status === 429 && retries > 0) {
-      const retryAfter = error.response?.headers?.['retry-after'] || 5;
-      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-      return apiCallWithRetry(fn, retries - 1);
-    }
-    throw error;
-  }
-}
+// Customize retry behavior
+const client = new GorgiasClient({
+  subdomain: 'mycompany',
+  email: 'user@example.com',
+  apiKey: 'your-api-key',
+  retry: {
+    maxAttempts: 5,
+    baseDelayMs: 2000,
+    maxDelayMs: 60000,
+  },
+});
 
-// Usage
-const customers = await apiCallWithRetry(() => 
-  client.customers.list({ limit: 100 })
-);
+// Disable retries for a specific request
+const customer = await client.customers.get(123, { retry: false });
+```
+
+## Request Options
+
+All resource methods accept an optional `options` parameter:
+
+```typescript
+// Custom timeout
+const customer = await client.customers.get(123, {
+  timeoutMs: 5000
+});
+
+// Request cancellation
+const controller = new AbortController();
+setTimeout(() => controller.abort(), 1000);
+
+const customers = await client.customers.list({}, {
+  signal: controller.signal
+});
+
+// Trace ID for request correlation
+const ticket = await client.tickets.get(456, {
+  traceId: 'req-12345'
+});
 ```
 
 ## TypeScript Support
@@ -248,7 +368,7 @@ const customers = await apiCallWithRetry(() =>
 This library is fully typed. All API responses and request parameters are strongly typed:
 
 ```typescript
-import { Customer, Ticket, TicketCreateRequest } from 'gorgias-client';
+import type { Customer, Ticket, TicketCreateRequest } from 'gorgias-client';
 
 // TypeScript will provide autocomplete and type checking
 const customer: Customer = await client.customers.get(123);
@@ -258,6 +378,40 @@ const ticketData: TicketCreateRequest = {
   subject: 'Help needed',
   // TypeScript will catch typos and missing required fields
 };
+```
+
+## Migration from v1.x
+
+### Constructor Change
+
+```typescript
+// v1.x (deprecated)
+const client = new GorgiasClient('subdomain', 'email', 'apiKey');
+
+// v2.x
+const client = new GorgiasClient({
+  subdomain: 'subdomain',
+  email: 'email',
+  apiKey: 'apiKey',
+});
+```
+
+### Error Handling Changes
+
+```typescript
+// v1.x - error.response was untyped
+catch (error) {
+  console.log(error.response); // any
+}
+
+// v2.x - typed error properties
+catch (error) {
+  if (error instanceof GorgiasAPIError) {
+    console.log(error.status);           // number
+    console.log(error.errorCode);        // string | undefined
+    console.log(error.requestContext);   // { method, path }
+  }
+}
 ```
 
 ## License

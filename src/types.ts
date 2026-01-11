@@ -1,3 +1,11 @@
+/**
+ * Type definitions for the Gorgias API.
+ */
+
+// ============================================================================
+// Customer Types
+// ============================================================================
+
 export interface Customer {
   id: number;
   channels: CustomerChannel[];
@@ -5,7 +13,7 @@ export interface Customer {
   email: string;
   external_id: string | null;
   firstname: string;
-  integrations: Record<string, any>;
+  integrations: Record<string, unknown>;
   language: string | null;
   lastname: string;
   name: string | null;
@@ -17,7 +25,7 @@ export interface Customer {
 export interface CustomerChannel {
   type: string;
   address: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface CustomerCreateRequest {
@@ -42,12 +50,16 @@ export interface CustomerUpdateRequest {
   channels?: CustomerChannel[];
 }
 
+// ============================================================================
+// Ticket Types
+// ============================================================================
+
 export interface Ticket {
   id: number;
   uri: string;
   external_id: string | null;
   events: Event[];
-  status: 'open' | 'closed' | 'snoozed' | 'trashed' | 'spam';
+  status: TicketStatus;
   channel: string;
   via: string;
   from_agent: boolean | null;
@@ -57,9 +69,9 @@ export interface Ticket {
   language: string | null;
   subject: string | null;
   summary: TicketSummary | null;
-  meta: any;
+  meta: Record<string, unknown>;
   tags: Tag[];
-  custom_fields: Record<string, any> | null;
+  custom_fields: Record<string, unknown> | null;
   messages: TicketMessage[];
   created_datetime: string;
   opened_datetime: string | null;
@@ -70,9 +82,11 @@ export interface Ticket {
   trashed_datetime: string | null;
   snooze_datetime: string | null;
   satisfaction_survey: SatisfactionSurvey | null;
-  reply_options: any;
+  reply_options: Record<string, unknown> | null;
   is_unread: boolean;
 }
+
+export type TicketStatus = 'open' | 'closed' | 'snoozed' | 'trashed' | 'spam';
 
 export interface TicketSummary {
   content: string;
@@ -93,7 +107,7 @@ export interface SatisfactionSurvey {
   created_datetime: string;
   customer_id: number;
   id: number;
-  meta: any;
+  meta: Record<string, unknown>;
   score: number;
   scored_datetime: string;
   sent_datetime: string;
@@ -112,18 +126,22 @@ export interface TicketCreateRequest {
   external_id?: string;
   tags?: string[];
   assignee_user?: number;
-  meta?: any;
-  custom_fields?: Record<string, any>;
+  meta?: Record<string, unknown>;
+  custom_fields?: Record<string, unknown>;
 }
 
 export interface TicketUpdateRequest {
   subject?: string;
   external_id?: string;
   assignee_user?: number;
-  meta?: any;
-  custom_fields?: Record<string, any>;
-  status?: 'open' | 'closed' | 'snoozed' | 'trashed' | 'spam';
+  meta?: Record<string, unknown>;
+  custom_fields?: Record<string, unknown>;
+  status?: TicketStatus;
 }
+
+// ============================================================================
+// Message Types
+// ============================================================================
 
 export interface TicketMessage {
   id: number;
@@ -136,9 +154,9 @@ export interface TicketMessage {
   via: string;
   source: TicketMessageSource | null;
   sender: { id: number } | null;
-  auth_customer_identity: any | null;
+  auth_customer_identity: Record<string, unknown> | null;
   integration_id: number | null;
-  intents: any[];
+  intents: MessageIntent[];
   rule_id: number | null;
   from_agent: boolean;
   receiver: { id: number } | null;
@@ -148,20 +166,20 @@ export interface TicketMessage {
   stripped_text: string | null;
   stripped_html: string | null;
   stripped_signature: string | null;
-  attachments: any[] | null;
-  macros: any[] | null;
-  actions: any[] | null;
-  headers: any | null;
-  meta: any;
+  attachments: Attachment[] | null;
+  macros: MacroAction[] | null;
+  actions: MessageAction[] | null;
+  headers: Record<string, string> | null;
+  meta: Record<string, unknown>;
   created_datetime: string;
   deleted_datetime: string | null;
   sent_datetime: string | null;
   failed_datetime: string | null;
   opened_datetime: string | null;
-  last_sending_error: any | null;
+  last_sending_error: SendingError | null;
   is_retriable: boolean;
-  replied_by: any | null;
-  replied_to: any | null;
+  replied_by: number | null;
+  replied_to: number | null;
 }
 
 export interface TicketMessageSource {
@@ -178,13 +196,40 @@ export interface TicketMessageSource {
   type: string;
 }
 
+export interface MessageIntent {
+  name: string;
+  confidence: number;
+}
+
+export interface Attachment {
+  url: string;
+  name: string;
+  content_type: string;
+  size: number;
+}
+
+export interface MacroAction {
+  id: number;
+  name: string;
+}
+
+export interface MessageAction {
+  type: string;
+  data: Record<string, unknown>;
+}
+
+export interface SendingError {
+  code: string;
+  message: string;
+}
+
 export interface TicketMessageCreateRequest {
   body_text?: string;
   body_html?: string;
   from_agent?: boolean;
-  attachments?: any[];
-  headers?: any;
-  meta?: any;
+  attachments?: Attachment[];
+  headers?: Record<string, string>;
+  meta?: Record<string, unknown>;
   external_id?: string;
   channel?: string;
   via?: string;
@@ -197,10 +242,14 @@ export interface TicketMessageCreateRequest {
 export interface TicketMessageUpdateRequest {
   body_text?: string;
   body_html?: string;
-  attachments?: any[];
-  headers?: any;
-  meta?: any;
+  attachments?: Attachment[];
+  headers?: Record<string, string>;
+  meta?: Record<string, unknown>;
 }
+
+// ============================================================================
+// User Types
+// ============================================================================
 
 export interface User {
   id: number;
@@ -214,7 +263,7 @@ export interface User {
   firstname: string;
   lastname: string;
   language: string;
-  meta: any;
+  meta: Record<string, unknown>;
   name: string;
   role: { name: string };
   timezone: string;
@@ -232,7 +281,7 @@ export interface UserCreateRequest {
   language?: string;
   timezone?: string;
   external_id?: string;
-  meta?: any;
+  meta?: Record<string, unknown>;
 }
 
 export interface UserUpdateRequest {
@@ -245,37 +294,60 @@ export interface UserUpdateRequest {
   language?: string;
   timezone?: string;
   external_id?: string;
-  meta?: any;
+  meta?: Record<string, unknown>;
   active?: boolean;
 }
+
+// ============================================================================
+// Integration Types
+// ============================================================================
 
 export interface Integration {
   id: number;
   created_datetime: string;
   deactivated_datetime: string | null;
   description: string | null;
-  http: any | null;
+  http: IntegrationHttp | null;
   name: string;
   type: string;
   updated_datetime: string;
-  user: any;
+  user: IntegrationUser | null;
   uri: string;
   application_id: string | null;
   managed: boolean;
   business_hours_id: number | null;
 }
 
+export interface IntegrationHttp {
+  url: string;
+  headers?: Record<string, string>;
+}
+
+export interface IntegrationUser {
+  id: number;
+  email: string;
+  name: string;
+}
+
+// ============================================================================
+// Event Types
+// ============================================================================
+
 export interface Event {
   id: number;
   context: string;
   created_datetime: string;
-  data: any;
+  data: Record<string, unknown>;
   object_id: number;
   object_type: string;
   type: string;
   user_id: number | null;
   uri: string;
 }
+
+// ============================================================================
+// Pagination Types
+// ============================================================================
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -291,16 +363,4 @@ export interface PaginationParams {
   limit?: number;
   cursor?: string;
   order_by?: string;
-}
-
-export interface GorgiasError {
-  message: string;
-  status: number;
-  response?: any;
-}
-
-export interface AxiosConfig {
-  timeout?: number;
-  headers?: Record<string, string>;
-  [key: string]: any;
 }
