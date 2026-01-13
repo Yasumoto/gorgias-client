@@ -6,12 +6,34 @@ import { GorgiasError, RequestContext } from './base.js';
 
 /**
  * Error response shape from Gorgias API.
+ * Note: At runtime, error/message may be objects despite the interface.
  */
 export interface GorgiasErrorResponse {
   error?: string;
   message?: string;
   errors?: Array<{ field: string; message: string }>;
   error_code?: string;
+}
+
+/**
+ * Safely extracts a string message from an unknown value.
+ * Handles cases where API returns objects instead of strings.
+ */
+export function extractErrorMessage(value: unknown): string | undefined {
+  if (typeof value === 'string' && value.length > 0) {
+    return value;
+  }
+  if (value !== null && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    if (typeof obj.message === 'string' && obj.message.length > 0) {
+      return obj.message;
+    }
+    if (typeof obj.detail === 'string' && obj.detail.length > 0) {
+      return obj.detail;
+    }
+    return JSON.stringify(value);
+  }
+  return undefined;
 }
 
 /**
@@ -55,7 +77,9 @@ export class GorgiasAPIError extends GorgiasError {
     headers?: Headers,
     traceId?: string
   ): GorgiasAPIError {
-    const message = body?.error || body?.message || `HTTP ${status} error`;
+    const message = extractErrorMessage(body?.error)
+      ?? extractErrorMessage(body?.message)
+      ?? `HTTP ${status} error`;
     const errorCode = body?.error_code;
     const requestId = headers?.get('x-request-id') ?? undefined;
     const options = { errorCode, requestId, traceId };
@@ -68,7 +92,8 @@ export class GorgiasAPIError extends GorgiasError {
         return new NotFoundError(message, requestContext, options);
       case 429: {
         const retryAfter = headers?.get('retry-after');
-        const retryAfterMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : undefined;
+        const parsed = retryAfter ? parseInt(retryAfter, 10) : NaN;
+        const retryAfterMs = Number.isNaN(parsed) ? undefined : parsed * 1000;
         return new RateLimitError(message, requestContext, retryAfterMs, options);
       }
       case 422:
