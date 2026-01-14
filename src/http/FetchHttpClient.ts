@@ -174,7 +174,10 @@ export class FetchHttpClient implements HttpClient {
     path: string,
     params?: Record<string, string | number | boolean | undefined>
   ): string {
-    const url = new URL(path, this.config.baseUrl);
+    // Remove leading slash to prevent absolute path resolution
+    // which would discard the /api/ portion of baseUrl
+    const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+    const url = new URL(normalizedPath, this.config.baseUrl);
 
     if (params) {
       for (const [key, value] of Object.entries(params)) {
