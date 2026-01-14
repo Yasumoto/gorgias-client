@@ -95,8 +95,8 @@ export class GorgiasClient {
     const credentials = Buffer.from(`${config.email}:${config.apiKey}`).toString('base64');
     const authHeader = `Basic ${credentials}`;
 
-    // Build base URL
-    const baseUrl = config.baseUrl ?? `https://${config.subdomain}.gorgias.com/api`;
+    // Build base URL (trailing slash required for correct URL resolution with absolute paths)
+    const baseUrl = config.baseUrl ?? `https://${config.subdomain}.gorgias.com/api/`;
 
     // Create HTTP client
     this.http = new FetchHttpClient({
